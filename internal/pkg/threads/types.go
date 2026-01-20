@@ -120,16 +120,16 @@ type RepliesResponse struct {
 }
 
 type ReplyThread struct {
-	ID           string    `json:"id"`
-	Text         string    `json:"text"`
-	Timestamp    time.Time `json:"timestamp"`
-	MediaType    string    `json:"media_type"`
-	Permalink    string    `json:"permalink"`
-	Username     string    `json:"username"`
-	IsReply      bool      `json:"is_reply"`
-	RootPost     *PostRef  `json:"root_post,omitempty"`
-	RepliedTo    *PostRef  `json:"replied_to,omitempty"`
-	HideStatus   string    `json:"hide_status,omitempty"`
+	ID            string   `json:"id"`
+	Text          string   `json:"text"`
+	Timestamp     string   `json:"timestamp"`
+	MediaType     string   `json:"media_type"`
+	Permalink     string   `json:"permalink"`
+	Username      string   `json:"username"`
+	IsReply       bool     `json:"is_reply"`
+	RootPost      *PostRef `json:"root_post,omitempty"`
+	RepliedTo     *PostRef `json:"replied_to,omitempty"`
+	HideStatus    string   `json:"hide_status,omitempty"`
 	ReplyAudience string   `json:"reply_audience,omitempty"`
 }
 
