@@ -62,6 +62,11 @@ Parameters:
     Type: String
     NoEcho: true
 
+  FrontendUrl:
+    Type: String
+    Description: Frontend URL for OAuth redirects
+    Default: "http://localhost:3000"
+
 Resources:
   AyteuirFunction:
     Type: AWS::Serverless::Function
@@ -85,6 +90,7 @@ Resources:
           OPENAI_MODEL: gpt-4o
           JWT_SECRET: !Ref JWTSecret
           ENCRYPTION_KEY: !Ref EncryptionKey
+          FRONTEND_URL: !Ref FrontendUrl
           LOG_LEVEL: info
           LOG_FORMAT: json
       Events:

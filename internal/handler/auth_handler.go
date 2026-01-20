@@ -3,6 +3,7 @@ package handler
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 
 	"github.com/ayteuir/backend/internal/config"
@@ -35,27 +36,30 @@ func (h *AuthHandler) InitiateOAuth(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
+	frontendURL := h.cfg.App.FrontendURL
+
 	if code == "" {
 		errorParam := r.URL.Query().Get("error")
 		errorDesc := r.URL.Query().Get("error_description")
 		if errorParam != "" {
-			Error(w, http.StatusBadRequest, "OAUTH_ERROR", errorDesc)
+			redirectURL := fmt.Sprintf("%s/callback?error=%s&error_description=%s", frontendURL, errorParam, errorDesc)
+			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 			return
 		}
-		Error(w, http.StatusBadRequest, "MISSING_CODE", "Authorization code is required")
+		redirectURL := fmt.Sprintf("%s/callback?error=missing_code&error_description=Authorization+code+is+required", frontendURL)
+		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 		return
 	}
 
-	user, token, err := h.authService.HandleCallback(r.Context(), code)
+	_, token, err := h.authService.HandleCallback(r.Context(), code)
 	if err != nil {
-		Error(w, http.StatusInternalServerError, "AUTH_FAILED", err.Error())
+		redirectURL := fmt.Sprintf("%s/callback?error=auth_failed&error_description=%s", frontendURL, err.Error())
+		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 		return
 	}
 
-	JSON(w, http.StatusOK, map[string]interface{}{
-		"user":  user,
-		"token": token,
-	})
+	redirectURL := fmt.Sprintf("%s/callback?token=%s", frontendURL, token)
+	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
 
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {

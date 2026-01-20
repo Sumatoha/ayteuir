@@ -17,10 +17,11 @@ type Config struct {
 }
 
 type AppConfig struct {
-	Env     string
-	Port    int
-	Host    string
-	BaseURL string
+	Env         string
+	Port        int
+	Host        string
+	BaseURL     string
+	FrontendURL string
 }
 
 type ThreadsConfig struct {
@@ -58,10 +59,11 @@ type LogConfig struct {
 func Load() (*Config, error) {
 	cfg := &Config{
 		App: AppConfig{
-			Env:     getEnv("APP_ENV", "development"),
-			Port:    getEnvInt("APP_PORT", 8080),
-			Host:    getEnv("APP_HOST", "0.0.0.0"),
-			BaseURL: getEnv("APP_BASE_URL", "http://localhost:8080"),
+			Env:         getEnv("APP_ENV", "development"),
+			Port:        getEnvInt("APP_PORT", 8080),
+			Host:        getEnv("APP_HOST", "0.0.0.0"),
+			BaseURL:     getEnv("APP_BASE_URL", "http://localhost:8080"),
+			FrontendURL: getEnv("FRONTEND_URL", "http://localhost:3000"),
 		},
 		Threads: ThreadsConfig{
 			AppID:              getEnv("THREADS_APP_ID", ""),
