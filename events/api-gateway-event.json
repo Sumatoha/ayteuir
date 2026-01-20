@@ -1,0 +1,35 @@
+{
+  "resource": "/health",
+  "path": "/health",
+  "httpMethod": "GET",
+  "headers": {
+    "Accept": "*/*",
+    "Host": "localhost:3000",
+    "User-Agent": "curl/7.64.1"
+  },
+  "queryStringParameters": null,
+  "pathParameters": null,
+  "stageVariables": null,
+  "requestContext": {
+    "resourceId": "123456",
+    "resourcePath": "/health",
+    "httpMethod": "GET",
+    "extendedRequestId": "test-id",
+    "requestTime": "09/Apr/2024:12:34:56 +0000",
+    "path": "/health",
+    "accountId": "123456789012",
+    "protocol": "HTTP/1.1",
+    "stage": "test-invoke-stage",
+    "domainPrefix": "testPrefix",
+    "requestTimeEpoch": 1712664896000,
+    "requestId": "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
+    "identity": {
+      "sourceIp": "127.0.0.1",
+      "userAgent": "curl/7.64.1"
+    },
+    "domainName": "localhost",
+    "apiId": "1234567890"
+  },
+  "body": null,
+  "isBase64Encoded": false
+}

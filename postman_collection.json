@@ -1,0 +1,487 @@
+{
+	"info": {
+		"_postman_id": "ayteuir-api-collection",
+		"name": "Ayteuir API",
+		"description": "Threads Auto-Reply Service API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "webhookVerifyToken",
+			"value": "your_random_verify_token_min_32_chars",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Liveness Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Basic health check - always returns 200 if server is running"
+					}
+				},
+				{
+					"name": "Readiness Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health/ready",
+							"host": ["{{baseUrl}}"],
+							"path": ["health", "ready"]
+						},
+						"description": "Checks if MongoDB is connected"
+					}
+				}
+			]
+		},
+		{
+			"name": "Webhooks",
+			"item": [
+				{
+					"name": "Verify Webhook (GET)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/webhooks/threads?hub.mode=subscribe&hub.verify_token={{webhookVerifyToken}}&hub.challenge=test_challenge_123",
+							"host": ["{{baseUrl}}"],
+							"path": ["webhooks", "threads"],
+							"query": [
+								{
+									"key": "hub.mode",
+									"value": "subscribe"
+								},
+								{
+									"key": "hub.verify_token",
+									"value": "{{webhookVerifyToken}}"
+								},
+								{
+									"key": "hub.challenge",
+									"value": "test_challenge_123"
+								}
+							]
+						},
+						"description": "Simulates Meta webhook verification. Should return the challenge value."
+					}
+				},
+				{
+					"name": "Webhook Event (POST)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Hub-Signature-256",
+								"value": "sha256=YOUR_COMPUTED_SIGNATURE",
+								"description": "HMAC SHA256 signature of the body"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"object\": \"instagram\",\n    \"entry\": [\n        {\n            \"id\": \"USER_THREADS_ID\",\n            \"time\": 1699000000,\n            \"changes\": [\n                {\n                    \"field\": \"mentions\",\n                    \"value\": {\n                        \"from\": {\n                            \"id\": \"SENDER_ID\",\n                            \"username\": \"test_user\"\n                        },\n                        \"media_id\": \"POST_ID_123\",\n                        \"text\": \"@yourusername this is a test mention!\",\n                        \"timestamp\": \"2024-01-15T10:30:00Z\"\n                    }\n                }\n            ]\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/webhooks/threads",
+							"host": ["{{baseUrl}}"],
+							"path": ["webhooks", "threads"]
+						},
+						"description": "Simulates incoming webhook from Threads. Note: signature verification will fail without proper HMAC."
+					}
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Start OAuth Flow",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/threads",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "threads"]
+						},
+						"description": "Redirects to Threads OAuth page. Open in browser, not Postman."
+					}
+				},
+				{
+					"name": "OAuth Callback",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/threads/callback?code=AUTH_CODE_FROM_THREADS",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "threads", "callback"],
+							"query": [
+								{
+									"key": "code",
+									"value": "AUTH_CODE_FROM_THREADS"
+								}
+							]
+						},
+						"description": "Called by Threads after user authorizes. Returns JWT token."
+					}
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "me"]
+						},
+						"description": "Returns current authenticated user info"
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/refresh",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "refresh"]
+						},
+						"description": "Refreshes the Threads access token"
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "logout"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get Settings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/user/settings",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "user", "settings"]
+						}
+					}
+				},
+				{
+					"name": "Update Settings",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reply_delay_seconds\": 30,\n    \"max_replies_per_hour\": 50,\n    \"ignore_verified_accounts\": false,\n    \"ignore_keywords\": [\"spam\", \"bot\", \"promo\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/user/settings",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "user", "settings"]
+						}
+					}
+				},
+				{
+					"name": "Toggle Auto-Reply",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"enabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/user/auto-reply/toggle",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "user", "auto-reply", "toggle"]
+						}
+					}
+				},
+				{
+					"name": "Delete Account",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/user/account",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "user", "account"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Templates",
+			"item": [
+				{
+					"name": "List Templates",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/templates",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "templates"]
+						}
+					}
+				},
+				{
+					"name": "Create Template",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Complaint Response\",\n    \"mention_type\": \"complaint\",\n    \"content\": \"Hi @{{.Username}}, we're sorry to hear about your experience. Please DM us with more details so we can help resolve this.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/templates",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "templates"]
+						},
+						"description": "Create a new response template. mention_type can be: complaint, positive, question, neutral, spam"
+					}
+				},
+				{
+					"name": "Create Template - Positive",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Thank You Response\",\n    \"mention_type\": \"positive\",\n    \"content\": \"Thank you so much @{{.Username}}! We really appreciate your kind words! 🙏\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/templates",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "templates"]
+						}
+					}
+				},
+				{
+					"name": "Create Template - Question",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Question Response\",\n    \"mention_type\": \"question\",\n    \"content\": \"Hey @{{.Username}}! Great question. Feel free to check our FAQ or DM us for more details.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/templates",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "templates"]
+						}
+					}
+				},
+				{
+					"name": "Get Template",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/templates/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "templates", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TEMPLATE_ID"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Template",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Complaint Response\",\n    \"content\": \"Hi @{{.Username}}, we apologize for any inconvenience. Our support team will reach out shortly.\",\n    \"is_active\": true,\n    \"priority\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/templates/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "templates", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TEMPLATE_ID"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Template",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/templates/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "templates", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TEMPLATE_ID"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Mentions",
+			"item": [
+				{
+					"name": "List Mentions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/mentions?limit=20&offset=0",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "mentions"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Mention",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/mentions/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "mentions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "MENTION_ID"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Retry Failed Mention",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/mentions/:id/retry",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "mentions", ":id", "retry"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "MENTION_ID"
+								}
+							]
+						},
+						"description": "Retry processing a failed mention"
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,115 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Ayteuir - Threads Auto-Reply Service
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: provided.al2023
+    Architectures:
+      - arm64
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,PUT,PATCH,DELETE,OPTIONS'"
+      AllowHeaders: "'Content-Type,Authorization,X-Request-ID'"
+      AllowOrigin: "'*'"
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues:
+      - development
+      - staging
+      - production
+
+  MongoDBUri:
+    Type: String
+    NoEcho: true
+    Description: MongoDB Atlas connection string
+
+  MongoDBDatabase:
+    Type: String
+    Default: ayteuir
+
+  ThreadsAppId:
+    Type: String
+    NoEcho: true
+
+  ThreadsAppSecret:
+    Type: String
+    NoEcho: true
+
+  ThreadsWebhookVerifyToken:
+    Type: String
+    NoEcho: true
+
+  ThreadsRedirectUri:
+    Type: String
+    Description: OAuth callback URL
+    Default: "https://example.execute-api.us-east-1.amazonaws.com/Prod/api/v1/auth/threads/callback"
+
+  OpenAIApiKey:
+    Type: String
+    NoEcho: true
+
+  JWTSecret:
+    Type: String
+    NoEcho: true
+
+  EncryptionKey:
+    Type: String
+    NoEcho: true
+
+Resources:
+  AyteuirFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: !Sub "ayteuir-api-${Environment}"
+      CodeUri: .
+      Handler: bootstrap
+      Description: Ayteuir API Lambda function
+      Environment:
+        Variables:
+          APP_ENV: !Ref Environment
+          MONGODB_URI: !Ref MongoDBUri
+          MONGODB_DATABASE: !Ref MongoDBDatabase
+          THREADS_APP_ID: !Ref ThreadsAppId
+          THREADS_APP_SECRET: !Ref ThreadsAppSecret
+          THREADS_WEBHOOK_VERIFY_TOKEN: !Ref ThreadsWebhookVerifyToken
+          THREADS_REDIRECT_URI: !Ref ThreadsRedirectUri
+          OPENAI_API_KEY: !Ref OpenAIApiKey
+          OPENAI_MODEL: gpt-4o
+          JWT_SECRET: !Ref JWTSecret
+          ENCRYPTION_KEY: !Ref EncryptionKey
+          LOG_LEVEL: info
+          LOG_FORMAT: json
+      Events:
+        ApiRoot:
+          Type: Api
+          Properties:
+            Path: /
+            Method: ANY
+        ApiProxy:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/ayteuir-api-${Environment}"
+      RetentionInDays: 14
+
+Outputs:
+  FunctionArn:
+    Description: Lambda Function ARN
+    Value: !GetAtt AyteuirFunction.Arn
+
+  ApiInfo:
+    Description: After deploy, find API URL in API Gateway console or run 'aws apigateway get-rest-apis'
+    Value: "Check API Gateway console for endpoint URL"
